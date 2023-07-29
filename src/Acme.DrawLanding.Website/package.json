@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "build": "copyfiles --flat ./node_modules/bootstrap/dist/css/bootstrap.min.css ./node_modules/bootstrap/dist/css/bootstrap.min.css.map ./wwwroot/css && copyfiles --flat ./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js ./wwwroot/js && copyfiles --flat ./node_modules/alpinejs/dist/cdn.min.js ./wwwroot/js && node -e \"require('fs').rename('./wwwroot/js/cdn.min.js', './wwwroot/js/alpine.min.js', function(err) { if (err) console.log(err); })\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jose J. Fernández",
@@ -10,5 +11,8 @@
   "dependencies": {
     "alpinejs": "^3.12.3",
     "bootstrap": "^5.3.0"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1"
   }
 }
