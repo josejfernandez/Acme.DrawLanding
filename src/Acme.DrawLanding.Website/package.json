@@ -1,0 +1,14 @@
+{
+  "name": "acme.drawlanding.website",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jose J. Fernández",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "alpinejs": "^3.12.3",
+    "bootstrap": "^5.3.0"
+  }
+}

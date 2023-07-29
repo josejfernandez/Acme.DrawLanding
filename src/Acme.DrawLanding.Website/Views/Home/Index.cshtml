@@ -1,0 +1,263 @@
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    Layout = "_Layout";
+
+    var requestToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+
+<div class="pt-3 pb-3">
+    <div class="container">
+
+        <div x-data="SubmitForm()">
+
+            <template x-if="!IsSubmitted && !Form.IsAdult">
+                <div>
+                    <p>You need to be at least 18 years old to participate.</p>
+                    <button class="btn btn-primary" x-on:click="Form.IsAdult = true; Message = ''">I am +18</button>
+                    <p class="mt-3" x-text="Message"></p>
+                </div>
+            </template>
+
+            <template x-if="!IsSubmitted && Form.IsAdult">
+                
+                <form x-on:submit.prevent="await Submit()">
+
+                    <div class="row">
+
+                        <div class="col-12 col-sm-4">
+                            <label for="form-FirstName" class="form-label">First Name</label>
+                            <input id="form-FirstName" required x-bind:class="FormValidation.FirstName.Class" x-model="Form.FirstName">
+                            <template x-if="FormValidation.FirstName.IsValid === false">
+                                <span class="invalid-feedback" x-text="FormValidation.FirstName.Message"></span>
+                            </template>
+                        </div>
+
+                        <div class="col-12 col-sm-4">
+                            <label for="form-LastName" class="form-label">Last Name</label>
+                            <input id="form-LastName" required x-bind:class="FormValidation.LastName.Class" x-model="Form.LastName">
+                            <template x-if="FormValidation.LastName.IsValid === false">
+                                <span class="invalid-feedback" x-text="FormValidation.LastName.Message"></span>
+                            </template>
+                        </div>
+
+                        <div class="col-12 col-sm-4">
+                            <label for="form-Email" class="form-label">Email</label>
+                            <input id="form-Email" required x-bind:class="FormValidation.Email.Class" x-model="Form.Email">
+                            <template x-if="FormValidation.Email.IsValid === false">
+                                <span class="invalid-feedback" x-text="FormValidation.Email.Message"></span>
+                            </template>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-3">
+                        <label for="form-SerialNumber" class="form-label">Serial Number</label>
+                        <input id="form-SerialNumber" required x-bind:class="FormValidation.SerialNumber.Class" x-model="Form.SerialNumber">
+                        <template x-if="FormValidation.SerialNumber.IsValid === false">
+                            <span class="invalid-feedback" x-text="FormValidation.SerialNumber.Message"></span>
+                        </template>
+                    </div>
+
+                    <div class="text-end mt-3">
+
+                        <template x-if="IsLoading">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </template>
+
+                        <input type="submit" class="btn btn-success" role="button" value="I am feeling lucky" x-bind:disabled="IsLoading">
+
+                        <p class="mt-3" x-text="Message"></p>
+
+                    </div>
+
+                </form>
+
+            </template>
+
+            <template x-if="IsSubmitted">
+                <p>Success! <a href="/">Participate again?</a></p>
+            </template>
+
+        </div>
+        
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        const ENDPOINT = '/submit';
+
+        function SubmitForm() {
+            return {
+                IsSubmitted: false,
+                IsLoading: false,
+                Message: '',
+                Form: {
+                    FirstName: '',
+                    LastName: '',
+                    Email: '',
+                    SerialNumber: '',
+                    IsAdult: false,
+                },
+                FormValidation: {
+                    FirstName: {
+                        IsValid: null,
+                        Message: null,
+                        Class: 'form-control'
+                    },
+                    LastName: {
+                        IsValid: null,
+                        Message: null,
+                        Class: 'form-control'
+                    },
+                    Email: {
+                        IsValid: null,
+                        Message: null,
+                        Class: 'form-control'
+                    },
+                    SerialNumber: {
+                        IsValid: null,
+                        Message: null,
+                        Class: 'form-control form-control-lg'
+                    }
+                },
+                ClearForm() {
+
+                    this.Form.FirstName = '';
+                    this.FormValidation.FirstName.IsValid = null;
+                    this.FormValidation.FirstName.Message = null;
+
+                    this.Form.LastName = '';
+                    this.FormValidation.LastName.IsValid = null;
+                    this.FormValidation.LastName.Message = null;
+
+                    this.Form.Email = '';
+                    this.FormValidation.Email.IsValid = null;
+                    this.FormValidation.Email.Message = null;
+
+                    this.Form.SerialNumber = '';
+                    this.FormValidation.SerialNumber.IsValid = null;
+                    this.FormValidation.SerialNumber.Message = null;
+
+                },
+                async Submit() {
+
+                    this.IsLoading = true;
+
+                    let response = await fetch(ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': '@requestToken'
+                        },
+                        body: JSON.stringify(this.Form),
+                    });
+
+                    if (response.ok) {
+                        this.IsSubmitted = true;
+                        this.ClearForm();
+                    } else {
+                        let text = await response.text();
+                        this.HandleBadRequest(text);
+                    }
+
+                    this.IsLoading = false;
+
+                },
+                HandleBadRequest(response) {
+                    
+                    var obj = JSON.parse(response);
+
+                    if (obj.errors["IsAdult"] !== undefined) {
+                        this.Message = '❌ Only adults are allowed to participate.';
+                        this.Form.IsAdult = false;
+                        this.ClearForm();
+                        return;
+                    }
+
+                    if (obj.title !== undefined) {
+                        this.Message = obj.title;
+                    } else {
+                        this.Message = '❌ An error occured while submitting the form.';
+                    }
+
+                    if (obj.errors["$.SerialNumber"] !== undefined) {
+                        /*
+                         * This happens when mapping the SerialNumber to Guid in .NET fails. At this stage, model
+                         * binding has not yet been run, therefore validity of other fields cannot be guaranteed.
+                         * So in this case, we only mark this field as invalid so we avoid marking the other fields
+                         * as valid, when the backend hasn't validated them.
+                         */
+                        this.UpdateFormFieldWithData(this.FormValidation.SerialNumber, false, 'Serial number format is not correct.');
+                        
+                    } else {
+                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.FirstName);
+                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.LastName);
+                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.Email);
+                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.SerialNumber);
+                    }
+
+                },
+                FindStatusInResponseAndUpdateField(responseObject, input) {
+
+                    let errors = [];
+
+                    switch (input) {
+
+                        case this.FormValidation.FirstName:
+                            this.PushAllItemsIfArray(responseObject.errors["FirstName"], errors);
+                            break;
+
+                        case this.FormValidation.LastName:
+                            this.PushAllItemsIfArray(responseObject.errors["LastName"], errors);
+                            break;
+
+                        case this.FormValidation.Email:
+                            this.PushAllItemsIfArray(responseObject.errors["Email"], errors);
+                            break;
+
+                        case this.FormValidation.SerialNumber:
+                            this.PushAllItemsIfArray(responseObject.errors["SerialNumber"], errors);
+                            break;
+
+                        default:
+                            throw new Error('Unsupported form field.');
+
+                    }
+
+                    if (errors.length > 0) {
+                        this.UpdateFormFieldWithData(input, false, errors.join(' '));
+                    } else {
+                        this.UpdateFormFieldWithData(input, true, '');
+                    }
+
+                },
+                PushAllItemsIfArray(src, target) {
+                    if (src !== undefined) {
+                        for (item of src) {
+                            target.push(item);
+                        }
+                    }
+                },
+                UpdateFormFieldWithData(input, isValid, message) {
+                    input.IsValid = isValid;
+                    input.Message = message;
+                    input.Class = 'form-control ' + this.GetValidationClass(input);
+                },
+                GetValidationClass(input) {
+                    switch (input.IsValid) {
+                        case null:
+                            return '';
+                        case true:
+                            return 'is-valid';
+                        case false:
+                            return 'is-invalid';
+                    }
+                },
+            };
+        }
+    </script>
+}

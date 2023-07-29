@@ -1,0 +1,34 @@
+﻿@model Acme.DrawLanding.Library.Common.Pagination.ResultPaginatedByOffset<Acme.DrawLanding.Library.Domain.Submissions.Submission>
+@{
+    Layout = "_Layout";
+}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">@nameof(Acme.DrawLanding.Library.Domain.Submissions.Submission.FirstName)</th>
+            <th scope="col">@nameof(Acme.DrawLanding.Library.Domain.Submissions.Submission.LastName)</th>
+            <th scope="col">@nameof(Acme.DrawLanding.Library.Domain.Submissions.Submission.Email)</th>
+            <th scope="col">@nameof(Acme.DrawLanding.Library.Domain.Submissions.Submission.SerialNumber)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var submissions in Model.Items)
+        {
+            <tr>
+                <th scope="row">@submissions.Id</th>
+                <td>@submissions.FirstName</td>
+                <td>@submissions.LastName</td>
+                <td>@submissions.Email</td>
+                <td>@submissions.SerialNumber</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    <p>Page @Model.Pagination.PageNumber out of @Model.TotalPages</p>
+    <p>Viewing @Model.Items.Count items out of @Model.TotalItems</p>
+}

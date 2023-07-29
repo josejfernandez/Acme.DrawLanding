@@ -1,0 +1,24 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+</head>
+<body>
+
+    <header class="container">
+        <h1>ACME Wonderful Draw</h1>
+        <small><a href="/admin">View submissions</a></small>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <script defer src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script defer src="~/lib/alpinejs/cdn.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
