@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Acme.DrawLanding.Library.Domain.SerialNumbers;
 using Acme.DrawLanding.Library.Domain.Submissions;
 using Acme.DrawLanding.Tests.Mocking;
 using Acme.DrawLanding.Tests.Mocking.Submissions;
+using Acme.DrawLanding.Website;
 using Acme.DrawLanding.Website.Controllers;
 using Acme.DrawLanding.Website.Domain.Submissions;
 using Microsoft.AspNetCore.Mvc;
@@ -30,18 +32,25 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
         return new SubmissionsController(submissionsRepository.Object);
     }
 
-    [Fact]
-    public async Task Get_Index__returns_success()
+    private async Task<HttpClient> GetAppClientWithCsrfToken()
     {
-        // Arrange
-        var request = SubmissionMocking.CreateValidSubmissionRequest();
-        var sut = CreateSut();
+        var client = _integrationTestFixture.AppClient;
 
-        // Act
-        var result = await sut.Index(request);
+        var initial = await client.GetAsync("/");
+        var initialContent = await initial.Content.ReadAsStringAsync();
 
-        // Assert
-        Assert.IsType<OkObjectResult>(result);
+        var tokenMatch = Regex.Match(initialContent, $@"'{Constants.CsrfHeaderName}': '([^""]+)'");
+
+        if (!tokenMatch.Success)
+        {
+            Assert.Fail("CSRF token is needed to run the test.");
+        }
+
+        var token = tokenMatch.Groups[1].Captures[0].Value;
+
+        client.DefaultRequestHeaders.Add(Constants.CsrfHeaderName, token);
+
+        return client;
     }
 
     [Fact]
@@ -49,6 +58,7 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
     {
         // Arrange
         var request = SubmissionMocking.CreateValidSubmissionRequest();
+        var client = await GetAppClientWithCsrfToken();
 
         await _integrationTestFixture.SeedDatabase(async (context) =>
         {
@@ -60,8 +70,6 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
 
             await context.SaveChangesAsync();
         });
-
-        var client = _integrationTestFixture.AppClient;
 
         // Act
         var httpContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
@@ -76,7 +84,7 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
     {
         // Arrange
         var request = SubmissionMocking.CreateValidSubmissionRequest();
-        var client = _integrationTestFixture.AppClient;
+        var client = await GetAppClientWithCsrfToken();
 
         request.FirstName = null;
 
@@ -98,7 +106,7 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
     {
         // Arrange
         var request = SubmissionMocking.CreateValidSubmissionRequest();
-        var client = _integrationTestFixture.AppClient;
+        var client = await GetAppClientWithCsrfToken();
 
         request.LastName = null;
 
@@ -120,7 +128,7 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
     {
         // Arrange
         var request = SubmissionMocking.CreateValidSubmissionRequest();
-        var client = _integrationTestFixture.AppClient;
+        var client = await GetAppClientWithCsrfToken();
 
         request.Email = null;
 

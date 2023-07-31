@@ -3,6 +3,7 @@
     Layout = "_Layout";
 
     var requestToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+    var csrfHeaderName = Acme.DrawLanding.Website.Constants.CsrfHeaderName;
 }
 
 <div class="pt-3 pb-3">
@@ -88,6 +89,9 @@
 @section scripts {
     <script>
         const ENDPOINT = '/submit';
+        const Message_ErrorSubmittingForm = '❌ An error occured while submitting the form.';
+        const Message_OnlyAdultsAreAllowed = '❌ Only adults are allowed to participate.';
+        const Message_UnsupportedFormField = 'Unsupported form field.';
 
         function SubmitForm() {
             return {
@@ -151,40 +155,47 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
-                            'X-CSRF-TOKEN': '@requestToken'
+                            '@csrfHeaderName': '@requestToken'
                         },
                         body: JSON.stringify(this.Form),
                     });
 
-                    if (response.ok) {
-                        this.IsSubmitted = true;
-                        this.ClearForm();
-                    } else {
+                    try {
+
                         let text = await response.text();
-                        this.HandleBadRequest(text);
+                        let responseObject = JSON.parse(text);
+
+                        if (response.ok) {
+                            this.IsSubmitted = true;
+                            this.ClearForm();
+                        } else {
+                            this.HandleBadRequest(responseObject);
+                        }
+
+                    } catch (err) {
+                        this.Message = Message_ErrorSubmittingForm;
+                        console.error(err);
                     }
 
                     this.IsLoading = false;
 
                 },
                 HandleBadRequest(response) {
-                    
-                    var obj = JSON.parse(response);
 
-                    if (obj.errors["IsAdult"] !== undefined) {
-                        this.Message = '❌ Only adults are allowed to participate.';
+                    if (response.errors["IsAdult"] !== undefined) {
+                        this.Message = Message_OnlyAdultsAreAllowed;
                         this.Form.IsAdult = false;
                         this.ClearForm();
                         return;
                     }
 
-                    if (obj.title !== undefined) {
-                        this.Message = obj.title;
+                    if (response.title !== undefined) {
+                        this.Message = response.title;
                     } else {
-                        this.Message = '❌ An error occured while submitting the form.';
+                        this.Message = Message_ErrorSubmittingForm;
                     }
 
-                    if (obj.errors["$.SerialNumber"] !== undefined) {
+                    if (response.errors["$.SerialNumber"] !== undefined) {
                         /*
                          * This happens when mapping the SerialNumber to Guid in .NET fails. At this stage, model
                          * binding has not yet been run, therefore validity of other fields cannot be guaranteed.
@@ -194,10 +205,10 @@
                         this.UpdateFormFieldWithData(this.FormValidation.SerialNumber, false, 'Serial number format is not correct.');
                         
                     } else {
-                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.FirstName);
-                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.LastName);
-                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.Email);
-                        this.FindStatusInResponseAndUpdateField(obj, this.FormValidation.SerialNumber);
+                        this.FindStatusInResponseAndUpdateField(response, this.FormValidation.FirstName);
+                        this.FindStatusInResponseAndUpdateField(response, this.FormValidation.LastName);
+                        this.FindStatusInResponseAndUpdateField(response, this.FormValidation.Email);
+                        this.FindStatusInResponseAndUpdateField(response, this.FormValidation.SerialNumber);
                     }
 
                 },
@@ -224,7 +235,7 @@
                             break;
 
                         default:
-                            throw new Error('Unsupported form field.');
+                            throw new Error(Message_UnsupportedFormField);
 
                     }
 

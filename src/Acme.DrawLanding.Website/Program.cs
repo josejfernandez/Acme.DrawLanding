@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Authentication;
-
 namespace Acme.DrawLanding.Website;
 
 public class Program
@@ -17,7 +15,7 @@ public class Program
         });
 
         builder.Services.AddControllersWithViews();
-        builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+        builder.Services.AddAntiforgery(options => options.HeaderName = Constants.CsrfHeaderName);
 
         builder.Services.AddPersistence(connectionString);
         builder.Services.AddRepositories();

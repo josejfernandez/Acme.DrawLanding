@@ -15,7 +15,7 @@ public sealed class SubmissionsController : Controller
     }
 
     [HttpPost("/submit")]
-    //[ValidateAntiForgeryToken]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index([FromBody] FormSubmissionRequest request)
     {
         if (!request.IsAdult)
