@@ -9,7 +9,7 @@ Requisites:
 - .NET. Command `dotnet run` needs to work on your machine.
 - Node.js and NPM. Command `npm` needs to work on your machine.
 
-### Seting up the database
+### Setting up the database
 
 A file `database.db` is provided in the repository. It contains an empty database ready to be used. Copy it to a location in your computer.
 
