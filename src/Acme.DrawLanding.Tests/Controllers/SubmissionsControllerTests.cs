@@ -32,27 +32,6 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
         return new SubmissionsController(submissionsRepository.Object);
     }
 
-    private async Task<HttpClient> GetAppClientWithCsrfToken()
-    {
-        var client = _integrationTestFixture.AppClient;
-
-        var initial = await client.GetAsync("/");
-        var initialContent = await initial.Content.ReadAsStringAsync();
-
-        var tokenMatch = Regex.Match(initialContent, $@"'{Constants.CsrfHeaderName}': '([^""]+)'");
-
-        if (!tokenMatch.Success)
-        {
-            Assert.Fail("CSRF token is needed to run the test.");
-        }
-
-        var token = tokenMatch.Groups[1].Captures[0].Value;
-
-        client.DefaultRequestHeaders.Add(Constants.CsrfHeaderName, token);
-
-        return client;
-    }
-
     [Fact]
     public async Task Post_Index__happy_path()
     {
@@ -60,16 +39,7 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
         var request = SubmissionMocking.CreateValidSubmissionRequest();
         var client = await GetAppClientWithCsrfToken();
 
-        await _integrationTestFixture.SeedDatabase(async (context) =>
-        {
-            await context.SerialNumbers.AddAsync(new SerialNumberRecord()
-            {
-                Content = request.SerialNumber!.Value,
-                Uses = 0,
-            });
-
-            await context.SaveChangesAsync();
-        });
+        await SeedDatabaseWithSerialNumber(request.SerialNumber!.Value);
 
         // Act
         var httpContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
@@ -131,6 +101,30 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
         var client = await GetAppClientWithCsrfToken();
 
         request.Email = null;
+
+        // Act
+        var httpContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        var response = await client.PostAsync("/submit", httpContent);
+
+        // Assert
+        var content = await response.Content.ReadAsStringAsync();
+        var problem = JsonSerializer.Deserialize<ValidationProblemDetails>(content);
+
+        Assert.NotNull(problem);
+        Assert.Single(problem.Errors);
+        Assert.Contains(problem.Errors, x => x.Key == nameof(FormSubmissionRequest.Email));
+    }
+
+    [Fact]
+    public async Task Post_Index__validates_email()
+    {
+        // Arrange
+        var request = SubmissionMocking.CreateValidSubmissionRequest();
+        var client = await GetAppClientWithCsrfToken();
+
+        await SeedDatabaseWithSerialNumber(request.SerialNumber!.Value);
+
+        request.Email = "this-is-not-an-email";
 
         // Act
         var httpContent = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
@@ -208,5 +202,40 @@ public sealed class SubmissionsControllerTests : IClassFixture<IntegrationTestFi
         var validationProblems = Assert.IsType<ValidationProblemDetails>(objectResult.Value);
 
         Assert.Contains(validationProblems.Errors, x => x.Key == nameof(FormSubmissionRequest.SerialNumber));
+    }
+
+    private async Task<HttpClient> GetAppClientWithCsrfToken()
+    {
+        var client = _integrationTestFixture.AppClient;
+
+        var initial = await client.GetAsync("/");
+        var initialContent = await initial.Content.ReadAsStringAsync();
+
+        var tokenMatch = Regex.Match(initialContent, $@"'{Constants.CsrfHeaderName}': '([^""]+)'");
+
+        if (!tokenMatch.Success)
+        {
+            Assert.Fail("CSRF token is needed to run the test.");
+        }
+
+        var token = tokenMatch.Groups[1].Captures[0].Value;
+
+        client.DefaultRequestHeaders.Add(Constants.CsrfHeaderName, token);
+
+        return client;
+    }
+
+    private async Task SeedDatabaseWithSerialNumber(Guid serialNumber)
+    {
+        await _integrationTestFixture.SeedDatabase(async (context) =>
+        {
+            await context.SerialNumbers.AddAsync(new SerialNumberRecord()
+            {
+                Content = serialNumber,
+                Uses = 0,
+            });
+
+            await context.SaveChangesAsync();
+        });
     }
 }
