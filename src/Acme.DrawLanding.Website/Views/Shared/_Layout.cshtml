@@ -7,11 +7,20 @@
     <link rel="stylesheet" href="~/css/bootstrap.min.css" />
 </head>
 <body>
+    <div class="container">
 
-    <header class="container">
-        <h1>ACME Wonderful Draw</h1>
-        <small><a href="/admin">View submissions</a></small>
-    </header>
+        <header>
+            <h1>ACME Wonderful Draw</h1>
+            <small>
+                <a href="/">Home</a> | <a href="/admin">Admin UI</a> | <a href="/admin/users">Create a user</a>
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    @("|") <span>Hi <strong>@User.Identity.Name</strong>.</span> <a href="/account/logout">Logout</a>
+                }
+            </small>
+        </header>
+
+    </div>
 
     <main role="main">
         @RenderBody()

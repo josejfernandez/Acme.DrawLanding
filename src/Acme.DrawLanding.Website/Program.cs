@@ -17,6 +17,8 @@ public class Program
         {
             options.AccessDeniedPath = "/account/denied";
             options.LoginPath = "/account/login";
+            options.LogoutPath = "/account/logout";
+            options.ExpireTimeSpan = TimeSpan.FromHours(1);
         });
 
         builder.Services.AddControllersWithViews();

@@ -4,23 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/bootstrap.min.css" />
 </head>
 <body>
     <div class="container">
 
         <header>
-            <h1>ACME Wonderful Draw</h1>
-            <small><a href="/">View site</a></small>
+            <h1>ACME Wonderful Draw (admin)</h1>
+            <small>
+                <a href="/">Site home</a> | <a href="/admin">Admin home</a> | <a href="/admin/users">Create a user</a>
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <span>Hi <strong>@User.Identity.Name</strong>.</span> <a href="/account/logout">Logout</a>
+                }
+            </small>
         </header>
 
         <main role="main">
             @RenderBody()
         </main>
+
     </div>
 
-    <script defer src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script defer src="~/lib/alpinejs/cdn.min.js"></script>
+    <script defer src="~/js/bootstrap.bundle.min.js"></script>
+    <script defer src="~/js/alpine.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
