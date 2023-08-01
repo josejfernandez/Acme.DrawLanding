@@ -12,10 +12,14 @@
         <header>
             <h1>ACME Wonderful Draw (admin)</h1>
             <small>
-                <a href="/">Site home</a> | <a href="/admin">Admin home</a> | <a href="/admin/users">Create a user</a>
+                <a href="/">Site home</a>
+                | <a href="/admin">Admin home</a>
+                | <a href="/admin/submissions">View form submissions</a>
+                | <a href="/admin/serialnumbers">View serial numbers</a>
+                | <a href="/admin/users">Create a user</a>
                 @if (User.Identity?.IsAuthenticated ?? false)
                 {
-                    <span>Hi <strong>@User.Identity.Name</strong>.</span> <a href="/account/logout">Logout</a>
+                    @("|") <span>Hi <strong>@User.Identity.Name</strong>.</span> <a href="/account/logout">Logout</a>
                 }
             </small>
         </header>

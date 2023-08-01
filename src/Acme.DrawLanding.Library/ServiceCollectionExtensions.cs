@@ -1,6 +1,7 @@
 ﻿using System.Data.Common;
 using Acme.DrawLanding.Library.Common.Encryption;
 using Acme.DrawLanding.Library.Data;
+using Acme.DrawLanding.Library.Domain.SerialNumbers;
 using Acme.DrawLanding.Library.Domain.Submissions;
 using Acme.DrawLanding.Library.Domain.Users;
 using Microsoft.Data.Sqlite;
@@ -46,6 +47,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        services.AddScoped<ISerialNumberRepository, SerialNumberRepository>();
         services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 
         return services;

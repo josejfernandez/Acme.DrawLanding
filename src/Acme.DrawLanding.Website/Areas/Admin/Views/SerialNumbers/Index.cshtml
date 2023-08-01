@@ -1,0 +1,82 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using Acme.DrawLanding.Website
+@using Acme.DrawLanding.Website.Html
+@model Acme.DrawLanding.Library.Common.Pagination.ResultPaginatedByOffset<Acme.DrawLanding.Library.Domain.SerialNumbers.SerialNumber>
+@{
+    Layout = "_Layout";
+}﻿
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th scope="col">@nameof(Acme.DrawLanding.Library.Domain.SerialNumbers.SerialNumber.Number)</th>
+            <th scope="col">@nameof(Acme.DrawLanding.Library.Domain.SerialNumbers.SerialNumber.Uses)</th>
+            <th scope="col">Uses left</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var serialNumber in Model.Items)
+        {
+            <tr>
+                <th scope="row">@serialNumber.Number</th>
+                <td>@serialNumber.Uses</td>
+                <td>@(Constants.MaxNumberOfUsesPerSerialNumber - serialNumber.Uses)</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    <p>Viewing @Model.Items.Count items out of @Model.TotalItems.</p>
+
+    <nav>
+        <ul class="pagination">
+
+            @{
+                var pageSizeQuery = Model.Pagination.PageSize != 10 ? $"pageSize={Model.Pagination.PageSize}" : string.Empty;
+            }
+
+            <li class="page-item"><a class="page-link" href="@(pageSizeQuery != string.Empty ? $"?{pageSizeQuery}" : string.Empty)">1</a></li>
+
+            @for (var i = 2; i <= Model.TotalPages; i++)
+            {
+                var query = $"?pageNumber={i}";
+
+                if (pageSizeQuery != string.Empty)
+                {
+                    query += $"&{pageSizeQuery}";
+                }
+
+                @if (Model.Pagination.PageNumber == i)
+                {
+                    <li class="page-item active" aria-current="page">
+                        <a class="page-link" href="@query">@i</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@query">@i</a>
+                    </li>
+                }
+            }
+
+        </ul>
+    </nav>
+}
+
+<h2>Create new</h2>
+
+<form asp-controller="SerialNumbers" asp-action="Create" method="post" role="form">
+
+    <div class="mb-3">
+        <label for="form-HowMany" class="form-label">Number of serial numbers to create</label>
+        <input id="form-HowMany" class="form-control" name="HowMany" type="number" min="1" max="100">
+    </div>
+
+    <div class="text-end mb-3">
+        <input type="submit" class="btn btn-success" role="button" value="Create">
+    </div>
+
+</form>

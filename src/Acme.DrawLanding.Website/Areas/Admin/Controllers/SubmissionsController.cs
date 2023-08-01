@@ -15,7 +15,7 @@ public sealed class SubmissionsController : Controller
         _submissionRepository = submissionRepository ?? throw new ArgumentNullException(nameof(submissionRepository));
     }
 
-    [HttpGet]
+    [HttpGet("/admin/submissions")]
     [Authorize]
     public async Task<IActionResult> Index([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
