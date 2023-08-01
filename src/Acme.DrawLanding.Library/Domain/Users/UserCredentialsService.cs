@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Konscious.Security.Cryptography;
 
 namespace Acme.DrawLanding.Library.Domain.Users;
 
@@ -17,11 +18,16 @@ public sealed class UserCredentialsService : IUserCredentialsService
     {
         ValidatePasswordSalt(salt);
 
-        using var hasher = new Rfc2898DeriveBytes(
-            Encoding.UTF8.GetBytes(password),
-            salt,
-            100000,
-            HashAlgorithmName.SHA512);
+        var passwordBytes = Encoding.UTF8.GetBytes(password);
+
+        // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
+        using var hasher = new Argon2d(passwordBytes)
+        {
+            DegreeOfParallelism = 1,
+            MemorySize = 32768,
+            Iterations = 10,
+            Salt = salt,
+        };
 
         return hasher.GetBytes(PasswordHashLengthInBytes);
     }
