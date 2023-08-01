@@ -11,4 +11,6 @@ public sealed class Submission
     public string Email { get; set; } = string.Empty;
 
     public Guid SerialNumber { get; set; }
+
+    public DateTime SubmittedAt { get; set; }
 }

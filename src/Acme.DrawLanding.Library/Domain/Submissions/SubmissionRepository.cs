@@ -32,6 +32,7 @@ public sealed class SubmissionRepository : ISubmissionRepository
                 FirstName = x.FirstName,
                 LastName = x.LastName,
                 SerialNumber = x.SerialNumber.Content,
+                SubmittedAt = x.SubmittedAt,
             })
             .ToListAsync();
 
@@ -60,7 +61,7 @@ public sealed class SubmissionRepository : ISubmissionRepository
 
         serialNumber.Uses++;
 
-        var record = CreateSubmissionRecord(submission, serialNumber);
+        var record = CreateSubmissionRecord(submission, serialNumber, DateTime.UtcNow);
 
         await _context.Submissions.AddAsync(record);
         await _context.SaveChangesAsync();
@@ -78,7 +79,7 @@ public sealed class SubmissionRepository : ISubmissionRepository
         }
     }
 
-    private SubmissionRecord CreateSubmissionRecord(Submission submission, SerialNumberRecord serialNumber)
+    private SubmissionRecord CreateSubmissionRecord(Submission submission, SerialNumberRecord serialNumber, DateTime submittedAt)
     {
         return new SubmissionRecord()
         {
@@ -86,6 +87,7 @@ public sealed class SubmissionRepository : ISubmissionRepository
             LastName = submission.LastName,
             Email = submission.Email,
             SerialNumberId = serialNumber.Id,
+            SubmittedAt = submittedAt,
         };
     }
 }
