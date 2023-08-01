@@ -23,6 +23,18 @@ Modify the configuration file for the website project, which is located in `/src
 }
 ```
 
+### Changing the encryption key
+
+The application uses an encryption key to encrypt sensitive data, such as passwords, in the database. This key can be modified in the configuration file. It needs to be a 256 bits key, written in base64 in the configuration file:
+
+```json
+{
+    "EncryptionKey": "WgEIdue6PRk2Ksv4qBIGucNN1Eep2F+/B9PaestJA5s=",
+}
+```
+
+A sample key is provided, but should be changed **before creating any user**. Once the first user has been created, the key should not be changed, since the application provides no means to update already encrypted data with the new key.
+
 ### Building the frontend
 
 Open a shell in the directory of the website project, which is located in `/src/Acme.DrawLanding.Website`, and run the following commands:
