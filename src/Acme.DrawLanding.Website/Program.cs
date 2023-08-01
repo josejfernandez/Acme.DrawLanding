@@ -1,3 +1,5 @@
+using Acme.DrawLanding.Library.Common.Encryption;
+
 namespace Acme.DrawLanding.Website;
 
 public class Program
@@ -7,6 +9,9 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         var connectionString = GetAndValidateConnectionString(builder);
+        var encryptionKey = GetEncryptionKey(builder);
+
+        builder.Services.AddSingleton(encryptionKey);
 
         builder.Services.AddAuthentication().AddCookie(options =>
         {
@@ -15,7 +20,13 @@ public class Program
         });
 
         builder.Services.AddControllersWithViews();
-        builder.Services.AddAntiforgery(options => options.HeaderName = Constants.CsrfHeaderName);
+        builder.Services.AddAntiforgery(options =>
+        {
+            options.FormFieldName = Constants.CsrfFieldName;
+            options.HeaderName = Constants.CsrfHeaderName;
+        });
+
+        builder.Services.AddDomainServices();
 
         builder.Services.AddPersistence(connectionString);
         builder.Services.AddRepositories();
@@ -55,5 +66,17 @@ public class Program
         }
 
         return connectionString;
+    }
+
+    private static EncryptionKey GetEncryptionKey(WebApplicationBuilder builder)
+    {
+        var key = builder.Configuration.GetRequiredSection("EncryptionKey").Value;
+
+        if (key == null)
+        {
+            throw new InvalidOperationException("Application needs an encryption key.");
+        }
+
+        return new EncryptionKey(Convert.FromBase64String(key));
     }
 }

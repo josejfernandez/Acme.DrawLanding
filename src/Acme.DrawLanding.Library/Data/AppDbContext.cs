@@ -1,5 +1,6 @@
 ﻿using Acme.DrawLanding.Library.Domain.SerialNumbers;
 using Acme.DrawLanding.Library.Domain.Submissions;
+using Acme.DrawLanding.Library.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -9,6 +10,7 @@ public class AppDbContext : DbContext
 {
     public DbSet<SerialNumberRecord> SerialNumbers { get; set; }
     public DbSet<SubmissionRecord> Submissions { get; set; }
+    public DbSet<UserRecord> Users { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -23,5 +25,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<SubmissionRecord>()
             .ToTable("Submissions");
+
+        modelBuilder.Entity<UserRecord>()
+            .ToTable("Users");
     }
 }

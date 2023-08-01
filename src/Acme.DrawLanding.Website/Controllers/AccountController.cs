@@ -1,4 +1,8 @@
-﻿using System.Security.Claims;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Acme.DrawLanding.Library.Domain.Users;
+using Acme.DrawLanding.Website.Domain.Submissions;
+using Acme.DrawLanding.Website.Domain.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,6 +10,13 @@ namespace Acme.DrawLanding.Website.Controllers;
 
 public class AccountController : Controller
 {
+    private readonly IUserService _userService;
+
+    public AccountController(IUserService userService)
+    {
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+    }
+
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -14,26 +25,26 @@ public class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(string username, string password, string? returnUrl = null)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login([FromForm] UserLoginRequest request)
     {
-        ViewData["ReturnUrl"] = returnUrl;
+        ViewData["ReturnUrl"] = request.ReturnUrl;
 
-        if (!ValidateLogin(username, password))
+        var validLogin = await _userService.ValidateCredentialsAsync(request.Username, request.Password);
+
+        if (!validLogin)
         {
+            ModelState.AddModelError(nameof(UserLoginRequest.Username), string.Empty);
+            ModelState.AddModelError(nameof(UserLoginRequest.Password), Messages.InvalidCredentials);
+
             return View();
         }
 
-        var claims = new List<Claim>()
-        {
-            new Claim("user", username),
-            new Claim("role", "Member")
-        };
+        await CreateAndStoreClaims(request.Username);
 
-        await HttpContext.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity(claims, "Cookies", "user", "role")));
-
-        if (Url.IsLocalUrl(returnUrl))
+        if (Url.IsLocalUrl(request.ReturnUrl))
         {
-            return Redirect(returnUrl);
+            return Redirect(request.ReturnUrl);
         }
         else
         {
@@ -42,7 +53,7 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public IActionResult AccessDenied(string? returnUrl = null)
+    public IActionResult AccessDenied([FromQuery] string? returnUrl = null)
     {
         return View();
     }
@@ -54,8 +65,16 @@ public class AccountController : Controller
         return Redirect("/");
     }
 
-    private bool ValidateLogin(string username, string password)
+    private async Task CreateAndStoreClaims(string username)
     {
-        return true;
+        var claims = new List<Claim>()
+        {
+            new Claim("user", username),
+            new Claim("role", "Member")
+        };
+
+        await HttpContext.SignInAsync(
+            new ClaimsPrincipal(
+                new ClaimsIdentity(claims, "Cookies", "user", "role")));
     }
 }

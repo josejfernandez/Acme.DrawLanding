@@ -7,9 +7,11 @@
 
 <div class="container">
 
-    <h2>Login</h2>
+    <h2>Create user</h2>
 
-    <form asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" role="form">
+    <p>This endpoint is exposed for conveniency.</p>
+
+    <form asp-controller="Users" asp-action="Index" method="post" role="form">
 
         <div class="mb-3">
             <label asp-for="Username" class="form-label">Username</label>
@@ -19,11 +21,10 @@
         <div class="mb-3">
             <label asp-for="Password" class="form-label">Password</label>
             <input asp-for="Password" class="form-control @Bootstrap.Form.ValidationClass(ViewData.ModelState[nameof(Model.Password)])" type="password">
-            <span asp-validation-for="Password" class="@Bootstrap.Form.ValidationClass(ViewData.ModelState[nameof(Model.Password)], true)"></span>
         </div>
 
         <div class="text-end mb-3">
-            <input type="submit" class="btn btn-success" role="button" value="Login">
+            <input type="submit" class="btn btn-success" role="button" value="Create">
         </div>
 
     </form>

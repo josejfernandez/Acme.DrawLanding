@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Acme.DrawLanding.Website.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class SubmissionsController : Controller
+public sealed class SubmissionsController : Controller
 {
     private readonly ISubmissionRepository _submissionRepository;
 
