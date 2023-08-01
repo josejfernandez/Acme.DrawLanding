@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Acme.DrawLanding.Website.Areas.Admin.Controllers;
 
@@ -6,6 +7,7 @@ namespace Acme.DrawLanding.Website.Areas.Admin.Controllers;
 public class HomeController : Controller
 {
     [HttpGet]
+    [Authorize]
     public IActionResult Index()
     {
         return View();
